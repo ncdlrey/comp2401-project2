@@ -25,6 +25,10 @@ static int system_store_resources(System *);
  * @param[in]  event_queue     Pointer to the `EventQueue` for event handling.
  */
 void system_create(System **system, const char *name, ResourceAmount consumed, ResourceAmount produced, int processing_time, EventQueue *event_queue) {
+    if(system == NULL || name == NULL){
+        return;
+    }
+    
     *system = (System*) malloc(sizeof(System));
     if(*system == NULL){
         printf("Error with memory allocation for System.");
@@ -59,14 +63,15 @@ void system_create(System **system, const char *name, ResourceAmount consumed, R
 void system_destroy(System *system) {
 
     if(system ==  NULL){
-        printf("NULL system provided.");
         return;
     }
 
-    free(system->name);
+    if(system->name != NULL){
+        free(system->name);
+    }
+
     free(system);
 }
-
 
 /**
  * Runs the main loop for a `System`.
@@ -228,6 +233,10 @@ static int system_store_resources(System *system) {
  * @param[out] array  Pointer to the `SystemArray` to initialize.
  */
 void system_array_init(SystemArray *array) {
+    if(array == NULL){
+        return;
+    }
+
     array->systems = (System**) calloc(1, sizeof(System*));
     if(array->systems == NULL){
         printf("Error with memory allocation for SystemArray.");
@@ -246,8 +255,16 @@ void system_array_init(SystemArray *array) {
  * @param[in,out] array  Pointer to the `SystemArray` to clean.
  */
 void system_array_clean(SystemArray *array) {
-    for (int i = 0; i < array->size; i++) {
-        system_destroy(array->systems[i]);
+    if(array == NULL){
+        return;
+    }
+
+    if(array->systems != NULL){
+        for (int i = 0; i < array->size; i++) {
+            if (array->systems[i] != NULL) {
+                system_destroy(array->systems[i]);
+            }
+        }
     }
 
     free(array->systems);
@@ -268,6 +285,9 @@ void system_array_clean(SystemArray *array) {
  * @param[in]     system  Pointer to the `System` to add.
  */
 void system_array_add(SystemArray *array, System *system) {
+    if (array == NULL || system == NULL) {
+        return; 
+    }
     System **ptr = NULL;
 
     if(array->size == array -> capacity){
@@ -280,10 +300,9 @@ void system_array_add(SystemArray *array, System *system) {
 
         for (int i = 0; i < array->size; i++) {
         ptr[i] = array->systems[i];
-        
-        system_array_clean(array);
-
         }
+
+        free(array->systems);
 
         array->systems = ptr;
         array->capacity = (array->capacity) * 2;

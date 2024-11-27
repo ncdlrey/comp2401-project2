@@ -17,6 +17,10 @@
  * @param[in]  max_capacity  Maximum capacity of the resource.
  */
 void resource_create(Resource **resource, const char *name, int amount, int max_capacity) {
+    if(resource == NULL || name == NULL){
+        return;
+    }
+
     *resource = (Resource*)malloc(sizeof(Resource));
     if(*resource == NULL){
         printf("Error with memory allocation for Resource.");
@@ -45,10 +49,13 @@ void resource_create(Resource **resource, const char *name, int amount, int max_
  */
 void resource_destroy(Resource *resource) {
     if(resource ==  NULL){
-        printf("NULL resource provided.");
         return;
     }
-    free(resource->name);
+
+    if(resource->name != NULL){
+        free(resource->name);
+    }
+
     free(resource);
 
 }
@@ -77,6 +84,9 @@ void resource_amount_init(ResourceAmount *resource_amount, Resource *resource, i
  * @param[out] array  Pointer to the `ResourceArray` to initialize.
  */
 void resource_array_init(ResourceArray *array) {
+    if(array == NULL){
+        return;
+    }
     array->resources = (Resource**) calloc(1, sizeof(Resource*));
     if(array->resources == NULL){
         printf("Error with memory allocation for ResourceArray.");
@@ -96,9 +106,18 @@ void resource_array_init(ResourceArray *array) {
  * @param[in,out] array  Pointer to the `ResourceArray` to clean.
  */
 void resource_array_clean(ResourceArray *array) {
-    for (int i = 0; i < array->size; i++) {
-        resource_destroy(array->resources[i]);
+    if(array == NULL){
+        return;
     }
+
+    if(array->resources != NULL){
+        for (int i = 0; i < array->size; i++) {
+            if (array->resources[i] != NULL) {
+                resource_destroy(array->resources[i]);
+            }
+        }
+    }
+
     free(array->resources);
     array->resources = NULL;
     array->size = 0;
@@ -116,6 +135,9 @@ void resource_array_clean(ResourceArray *array) {
  * @param[in]     resource  Pointer to the `Resource` to add.
  */
 void resource_array_add(ResourceArray *array, Resource *resource) {
+    if (array == NULL || resource == NULL) {
+        return; 
+    }
     Resource **ptr = NULL;
 
     if(array->size == array -> capacity){
@@ -127,16 +149,13 @@ void resource_array_add(ResourceArray *array, Resource *resource) {
         }
 
         for (int i = 0; i < array->size; i++) {
-        ptr[i] = array->resources[i];
-        
-        resource_array_clean(array);
-
+            ptr[i] = array->resources[i];
         }
+
+        free(array->resources);
 
         array->resources = ptr;
         array->capacity = (array->capacity) * 2;
-
-
     }
     
     array->resources[array->size] = resource;
