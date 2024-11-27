@@ -17,22 +17,23 @@
  * @param[in]  max_capacity  Maximum capacity of the resource.
  */
 void resource_create(Resource **resource, const char *name, int amount, int max_capacity) {
-    *resource = (Resource*) malloc(sizeof(Resource));
-    if(resource == NULL){
+    *resource = (Resource*)malloc(sizeof(Resource));
+    if(*resource == NULL){
         printf("Error with memory allocation for Resource.");
+        return;
     } 
 
-    (*resource)->name = (char*) malloc(strlen(name)+1);
+    (*resource)->name = (char*) malloc(strlen(name) + 1);
 
     if((*resource)->name == NULL){
-        printf("Error with memoru allocation for Resource name.");
+        printf("Error with memory allocation for Resource name.");
+        free(*resource);
+        return;
     }
 
     strcpy((*resource)->name, name);
     (*resource)->amount = amount;
     (*resource)->max_capacity = max_capacity;
-
-
 }
 
 /**
@@ -43,8 +44,12 @@ void resource_create(Resource **resource, const char *name, int amount, int max_
  * @param[in,out] resource  Pointer to the `Resource` to be destroyed.
  */
 void resource_destroy(Resource *resource) {
+    if(resource ==  NULL){
+        return;
+    }
     free(resource->name);
     free(resource);
+
 }
 
 /* ResourceAmount functions */
@@ -72,8 +77,9 @@ void resource_amount_init(ResourceAmount *resource_amount, Resource *resource, i
  */
 void resource_array_init(ResourceArray *array) {
     array->resources = (Resource**) calloc(1, sizeof(Resource*));
-    if(array == NULL){
+    if(array->resources == NULL){
         printf("Error with memory allocation for ResourceArray.");
+        return;
     }
 
     array->size = 0;
@@ -89,12 +95,14 @@ void resource_array_init(ResourceArray *array) {
  * @param[in,out] array  Pointer to the `ResourceArray` to clean.
  */
 void resource_array_clean(ResourceArray *array) {
-    for(int i = 0; i < array->size; i++){
+    for (int i = 0; i < array->size; i++) {
         resource_destroy(array->resources[i]);
     }
-
     free(array->resources);
-
+    array->resources = NULL;
+    array->size = 0;
+    array->capacity = 0;
+    
 }
 
 /**
@@ -107,23 +115,29 @@ void resource_array_clean(ResourceArray *array) {
  * @param[in]     resource  Pointer to the `Resource` to add.
  */
 void resource_array_add(ResourceArray *array, Resource *resource) {
-    Resource **ptr = NULL;  
+    Resource **ptr = NULL;
 
     if(array->size == array -> capacity){
-        ptr = (Resource**) calloc(array->capacity * 2, sizeof(Resource*));
+        ptr = (Resource**) calloc((array->capacity) * 2, sizeof(Resource*));
+
+        if(ptr == NULL){
+            printf("Error with memory allocation for ResourceArray.");
+            return;
+        }
+
+        for (int i = 0; i < array->size; i++) {
+        ptr[i] = array->resources[i];
+        
+        resource_array_clean(array);
+
+        }
+
+        array->resources = ptr;
+        array->capacity = (array->capacity) * 2;
+
+
     }
-
-    if(ptr == NULL){
-        printf("Error with memory allocation for ResourceArray.");
-    }
-
-    memcpy(ptr, array->resources, sizeof(Resource*) * array->size);
-
-
-    free(array->resources);
-    array->resources = ptr;
-    array->capacity = array->capacity * 2;
-
+    
     array->resources[array->size] = resource;
     array->size++;
 }

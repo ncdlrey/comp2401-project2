@@ -10,12 +10,13 @@ int main(void) {
     Manager manager;
     manager_init(&manager);
     load_data(&manager);
-
-    while (manager.simulation_running) {
+    int count = 5;
+    while (count>0) {
         manager_run(&manager);
         for (int i = 0; i < manager.system_array.size; ++i) {
             system_run(manager.system_array.systems[i]);
         }
+        count--;
     }
 
     manager_clean(&manager);
