@@ -33,6 +33,7 @@ void manager_init(Manager *manager) {
  */
 void manager_clean(Manager *manager) {
     resource_array_clean(&manager->resource_array);
+    system_array_clean(&manager->system_array);
     manager->simulation_running = 0;}
 
 /**

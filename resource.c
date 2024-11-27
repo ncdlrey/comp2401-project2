@@ -45,6 +45,7 @@ void resource_create(Resource **resource, const char *name, int amount, int max_
  */
 void resource_destroy(Resource *resource) {
     if(resource ==  NULL){
+        printf("NULL resource provided.");
         return;
     }
     free(resource->name);
