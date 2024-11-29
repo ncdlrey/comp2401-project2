@@ -57,16 +57,6 @@ void event_queue_clean(EventQueue *queue) {
         temp = current;
         current = current -> next;
 
-         // Free `system`
-        if (temp->event.system != NULL) {
-            free(temp->event.system);
-        }
-
-        // Free `resource`
-        if (temp->event.resource != NULL) {
-            free(temp->event.resource);
-        }
-
         free(temp);
     }
 
@@ -89,35 +79,14 @@ void event_queue_push(EventQueue *queue, const Event *event) {
 
     // Create new node for event and initialize
     EventNode *newEventNode = (EventNode*) malloc(sizeof(EventNode));
-    if(newEventNode == NULL){
-        printf("Error with memory allocation for EventNode.");
+    if (newEventNode == NULL) {
+        printf("Error with memory allocation for EventNode");
         return;
     }
 
-    // Dynamically allocate and copy `system`
-    if (event->system != NULL) {
-        newEventNode->event.system = (System *) malloc(sizeof(System));
-        if (newEventNode->event.system != NULL) {
-            *(newEventNode->event.system) = *(event->system); // Copy the System struct
-        }
-        else{
-            return;
-        }
-    }
-
-    // Dynamically allocate and copy `resource`
-    if (event->resource != NULL) {
-        newEventNode->event.resource = (Resource *) malloc(sizeof(Resource));
-        if (newEventNode->event.resource != NULL) {
-            *(newEventNode->event.resource) = *(event->resource); // Copy the Resource struct
-        }
-        else{
-            return;
-        }
-    }
-
+    newEventNode -> event = *(event);
     newEventNode -> next = NULL;
-    newEventNode -> event = *event; 
+    
 
     // Case 1: If the queue is empty or the new event has higher priority than the head, insert at the head
     if (queue->head == NULL || (event -> priority) > (queue -> head -> event.priority)) {
@@ -139,7 +108,6 @@ void event_queue_push(EventQueue *queue, const Event *event) {
     }
 
     queue->size++;
-
 }
 
 /**
@@ -158,36 +126,9 @@ int event_queue_pop(EventQueue *queue, Event *event) {
 
     EventNode *temp = queue->head;
     *event = temp -> event;
-
-    // Allocate and copy `system` if not NULL
-    if (temp->event.system != NULL) {
-        event->system = (System *) malloc(sizeof(System));
-        if (event->system != NULL) {
-            *(event->system) = *(temp->event.system);
-        }
-    }
-
-    // Allocate and copy `resource` if not NULL
-    if (temp->event.resource != NULL) {
-        event->resource = (Resource *) malloc(sizeof(Resource));
-        if (event->resource != NULL) {
-            *(event->resource) = *(temp->event.resource);
-        }
-    }
-
     queue->head = temp->next;
 
-    // Free the original `system` and `resource`
-    if (temp->event.system != NULL) {
-        free(temp->event.system);
-    }
-    if (temp->event.resource != NULL) {
-        free(temp->event.resource);
-    }
-
-    free(temp);
-    
+    free(temp);    
     queue->size--;
-
     return 1;
 }
