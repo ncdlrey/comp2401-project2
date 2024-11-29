@@ -33,7 +33,10 @@ void event_init(Event *event, System *system, Resource *resource, int status, in
  *
  * @param[out] queue  Pointer to the `EventQueue` to initialize.
  */
-void event_queue_init(EventQueue *queue) {}
+void event_queue_init(EventQueue *queue) {
+    queue -> head = NULL;
+    queue -> size = 0;
+}
 
 /**
  * Cleans up the `EventQueue`.
@@ -42,7 +45,24 @@ void event_queue_init(EventQueue *queue) {}
  * 
  * @param[in,out] queue  Pointer to the `EventQueue` to clean.
  */
-void event_queue_clean(EventQueue *queue) {}
+void event_queue_clean(EventQueue *queue) {
+    if(queue == NULL){
+        return;
+    }
+
+    EventNode *current = queue -> head;
+    EventNode *temp;
+
+    while(current != NULL){
+        temp = current;
+        current = current -> next;
+
+        free(temp);
+    }
+
+    queue -> head = NULL;
+    queue -> size = 0;
+}
 
 /**
  * Pushes an `Event` onto the `EventQueue`.
@@ -52,7 +72,43 @@ void event_queue_clean(EventQueue *queue) {}
  * @param[in,out] queue  Pointer to the `EventQueue`.
  * @param[in]     event  Pointer to the `Event` to push onto the queue.
  */
-void event_queue_push(EventQueue *queue, const Event *event) {}
+void event_queue_push(EventQueue *queue, const Event *event) {
+    if(queue == NULL || event == NULL){
+        return;
+    }
+
+    // Create new node for event and initialize
+    EventNode *newEventNode = (EventNode*) malloc(sizeof(EventNode));
+    if(newEventNode == NULL){
+        printf("Error with memory allocation for Event.");
+        return;
+    }
+
+    newEventNode -> next = NULL;
+    newEventNode -> event = *event; 
+
+    // Case 1: If the queue is empty or the new event has higher priority than the head, insert at the head
+    if (queue->head == NULL || (event -> priority) > (queue -> head -> event.priority)) {
+        newEventNode -> next = queue->head; 
+        queue->head = newEventNode;
+    } 
+    
+    // Case 2: Normal
+    else {
+        // Traverse the queue to find the correct insertion point
+        EventNode *current = queue->head;
+
+        while (current->next != NULL && current->next->event.priority >= event->priority) {
+            current = current->next;
+        }
+
+        newEventNode->next = current->next;
+        current->next = newEventNode;
+    }
+
+    queue->size++;
+
+}
 
 /**
  * Pops an `Event` from the `EventQueue`.
@@ -64,7 +120,17 @@ void event_queue_push(EventQueue *queue, const Event *event) {}
  * @return               Non-zero if an event was successfully popped; zero otherwise.
  */
 int event_queue_pop(EventQueue *queue, Event *event) {
-    // Temporarily, this only returns 0 so that it is ignored 
-    // during early testing. Replace this with the correct logic.
-    return 0;
+    if(queue == NULL || event == NULL || queue->head == NULL){
+        return 0;
+    }
+
+    EventNode *temp = queue->head;
+    *event = temp -> event;
+    queue->head = temp->next;
+
+    free(temp);
+    
+    queue->size--;
+
+    return 1;
 }
