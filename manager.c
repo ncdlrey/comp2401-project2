@@ -34,6 +34,7 @@ void manager_init(Manager *manager) {
 void manager_clean(Manager *manager) {
     resource_array_clean(&manager->resource_array);
     system_array_clean(&manager->system_array);
+    event_queue_clean(&manager->event_queue);
     manager->simulation_running = 0;}
 
 /**
@@ -58,7 +59,7 @@ void manager_run(Manager *manager) {
     
     event_found_flag = event_queue_pop(&manager->event_queue, &event);
 
-    while (event_found_flag) {
+    while (manager->simulation_running && event_found_flag) {
         // Handle the event
         printf("Event: [%s] Reported Resource [%s : %d] Status [%d]\n",
                 event.system->name,
