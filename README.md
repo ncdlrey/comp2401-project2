@@ -17,3 +17,5 @@ This program combines all of the knowledge from this course after reading week. 
 
 ## Credits  
     * Developed individually by Nicole Delos Reyes (101307115)
+    * Completed and submitted on 11-29-2024
+
