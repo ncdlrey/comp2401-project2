@@ -14,3 +14,6 @@ This program combines all of the knowledge from this course after reading week. 
   3. The program should automatically run
       3.a NOTE:  Typing `make` into the command line followed by `./a6` will also run the code
   4. Once the program starts, no user input is required. Everything is hardcoded in the main function.
+
+## Credits  
+    * Developed individually by Nicole Delos Reyes (101307115)
