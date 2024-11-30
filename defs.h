@@ -1,5 +1,6 @@
 #include <semaphore.h>
 
+
 // Don't worry about these! These are special codes that allow us to do some formatting in the terminal
 // Such as clearing the line before printing or moving the location of the "cursor" that will print.
 #define ANSI_CLEAR "\033[2J"
@@ -35,6 +36,9 @@ typedef struct Resource {
     char *name;      // Dynamically allocated string
     int amount;
     int max_capacity;
+
+    sem_t mutex;
+
 } Resource;
 
 // Represents the amount of a resource consumed/produced for a single system
@@ -52,6 +56,8 @@ typedef struct System {
     int processing_time;
     int status; 
     struct EventQueue *event_queue;  // Pointer to event queue shared by all systems and manager
+
+
 } System;
 
 // Used to send notifications to the manager about an issue / state of the system
@@ -73,6 +79,9 @@ typedef struct EventNode {
 typedef struct EventQueue {
     EventNode *head;
     int size;
+
+    sem_t mutex;
+
 } EventQueue;
 
 // A basic dynamic array to store all of the systems in the simulation
@@ -131,3 +140,7 @@ void system_array_add(SystemArray *array, System *system);
 void resource_array_init(ResourceArray *array);
 void resource_array_clean(ResourceArray *array);
 void resource_array_add(ResourceArray *array, Resource *resource);
+
+// Thread declarations
+void* system_thread(void* arg);
+void* manager_thread(void* arg);

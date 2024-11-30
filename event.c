@@ -36,6 +36,10 @@ void event_init(Event *event, System *system, Resource *resource, int status, in
 void event_queue_init(EventQueue *queue) {
     queue -> head = NULL;
     queue -> size = 0;
+
+    // Initialize the semaphore with a value of 1 (unlocked)
+    // 0 indicates that this semaphore is shared between threads within a single process
+    sem_init(&queue->mutex, 0, 1);
 }
 
 /**
@@ -50,18 +54,21 @@ void event_queue_clean(EventQueue *queue) {
         return;
     }
 
+    sem_destroy(&queue->mutex);
+
     EventNode *current = queue -> head;
     EventNode *temp;
 
     while(current != NULL){
         temp = current;
         current = current -> next;
-
         free(temp);
     }
 
+    
     queue -> head = NULL;
     queue -> size = 0;
+    
 }
 
 /**
@@ -77,16 +84,21 @@ void event_queue_push(EventQueue *queue, const Event *event) {
         return;
     }
 
+    
+
     // Create new node for event and initialize
     EventNode *newEventNode = (EventNode*) malloc(sizeof(EventNode));
     if (newEventNode == NULL) {
         printf("Error with memory allocation for EventNode");
+        sem_post(&queue->mutex); // release in case of error
         return;
     }
 
     newEventNode -> event = *(event);
     newEventNode -> next = NULL;
     
+    // Lock list
+    sem_wait(&queue->mutex);
 
     // Case 1: If the queue is empty or the new event has higher priority than the head, insert at the head
     if (queue->head == NULL || (event -> priority) > (queue -> head -> event.priority)) {
@@ -99,6 +111,8 @@ void event_queue_push(EventQueue *queue, const Event *event) {
         // Traverse the queue to find the correct insertion point
         EventNode *current = queue->head;
 
+        
+
         while (current->next != NULL && current->next->event.priority >= event->priority) {
             current = current->next;
         }
@@ -108,6 +122,8 @@ void event_queue_push(EventQueue *queue, const Event *event) {
     }
 
     queue->size++;
+    // Unlock the list once we're done
+    sem_post(&queue->mutex);
 }
 
 /**
@@ -124,11 +140,18 @@ int event_queue_pop(EventQueue *queue, Event *event) {
         return 0;
     }
 
+    // Lock list
+    sem_wait(&queue->mutex);
+
     EventNode *temp = queue->head;
     *event = temp -> event;
     queue->head = temp->next;
 
     free(temp);    
     queue->size--;
+
+    // Unlock list
+    sem_post(&queue->mutex);
+
     return 1;
 }

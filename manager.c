@@ -35,7 +35,8 @@ void manager_clean(Manager *manager) {
     resource_array_clean(&manager->resource_array);
     system_array_clean(&manager->system_array);
     event_queue_clean(&manager->event_queue);
-    manager->simulation_running = 0;}
+    manager->simulation_running = 0;
+    }
 
 /**
  * Runs the manager loop.
@@ -201,3 +202,20 @@ void display_simulation_state(Manager *manager) {
     fflush(stdout);
 }
 
+/*
+ * Thread function for a manager. 
+ * Runs a loop that calls on `manager_run()` to emmulate manager operations, terminating when
+ * `simmulation_running` is 0.
+ *
+ * @param[in,out] array   Pointer to the `Manager`.
+ *    
+ */
+void* manager_thread(void* arg) {
+    // Cast argument to a manager pointer
+    Manager* manager = arg;
+    
+    while (manager->simulation_running) {
+        manager_run(manager);
+    }
+    return NULL;
+}

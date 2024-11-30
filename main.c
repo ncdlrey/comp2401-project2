@@ -10,15 +10,35 @@ int main(void) {
     Manager manager;
     manager_init(&manager);
     load_data(&manager);
-    //int count = 5;
+
+    // Create threads for manager and systems
+    pthread_t main_manager_thread;
+    pthread_t system_threads[manager.system_array.size];  // Static array for system threads
+   
+    // Create a thread for the manager 
+    pthread_create(&main_manager_thread, NULL, manager_thread, &manager);
+  
+
+    // Create threads for each system
+    for(int i = 0; i < manager.system_array.size; i++){
+        pthread_create(&system_threads[i], NULL, system_thread, manager.system_array.systems[i]);
+    }
+
+    // Wait for all threads to complete execution
+    pthread_join(main_manager_thread, NULL);
+    
+    for(int i = 0; i < manager.system_array.size; i++){
+        pthread_join(system_threads[i], NULL);
+    }
+
     while (manager.simulation_running) {
         manager_run(&manager);
         for (int i = 0; i < manager.system_array.size; ++i) {
             system_run(manager.system_array.systems[i]);
         }
-        //count--;
+        
     }
-
+    
     manager_clean(&manager);
     return 0;
 }

@@ -38,6 +38,10 @@ void resource_create(Resource **resource, const char *name, int amount, int max_
     strcpy((*resource)->name, name);
     (*resource)->amount = amount;
     (*resource)->max_capacity = max_capacity;
+
+    // Initialize the semaphore with a value of 1 (unlocked)
+    // 0 indicates that this semaphore is shared between threads within a single process
+    sem_init(&(*resource)->mutex, 0, 1);
 }
 
 /**
@@ -56,6 +60,7 @@ void resource_destroy(Resource *resource) {
         free(resource->name);
     }
 
+    sem_destroy(&resource->mutex);
     free(resource);
 
 }

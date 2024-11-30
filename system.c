@@ -127,6 +127,9 @@ static int system_convert(System *system) {
     Resource *consumed_resource = system->consumed.resource;
     int amount_consumed = system->consumed.amount;
 
+    // Lock list
+    sem_wait(&consumed_resource->mutex);
+
     // We can always convert without consuming anything
     if (consumed_resource == NULL) {
         status = STATUS_OK;
@@ -150,6 +153,9 @@ static int system_convert(System *system) {
             system->amount_stored = 0;
         }
     }
+
+    // Unlock list
+    sem_post(&consumed_resource->mutex);
 
     return status;
 }
@@ -196,6 +202,9 @@ static int system_store_resources(System *system) {
     Resource *produced_resource = system->produced.resource;
     int available_space, amount_to_store;
 
+    // Lock
+    sem_wait(&produced_resource->mutex);
+
     // We can always proceed if there's nothing to store
     if (produced_resource == NULL || system->amount_stored == 0) {
         system->amount_stored = 0;
@@ -217,10 +226,14 @@ static int system_store_resources(System *system) {
         system->amount_stored = amount_to_store - available_space;
     }
 
+    // Unlock
+    sem_post(&produced_resource->mutex);
+
     if (system->amount_stored != 0) {
         return STATUS_CAPACITY;
     }
 
+    
     return STATUS_OK;
 }
 
@@ -313,4 +326,23 @@ void system_array_add(SystemArray *array, System *system) {
     array->systems[array->size] = system;
     array->size++;
 
+}
+
+/*
+ * Thread function for a system. 
+ * Runs a loop that calls on `system_run()` to emmulate system operations, terminating when
+ * the status is equal to TERMINATE.
+ *
+ * @param[in,out] array   Pointer to the `System`.
+ *    
+ */
+void* system_thread(void* arg) {
+    // Cast argument to a system pointer
+    System* system = arg;
+
+    while (system->status != TERMINATE) {
+        system_run(system);
+    }
+    
+    return NULL;
 }
